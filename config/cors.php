@@ -15,11 +15,18 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // For Sanctum cookie-based authentication, do NOT use a wildcard '*' when
+    // 'supports_credentials' is true. List the frontend origins explicitly.
+    'allowed_origins' => [
+        'http://localhost:8080',
+        'http://127.0.0.1:8080',
+        'http://localhost',
+        'http://127.0.0.1',
+    ],
 
     'allowed_origins_patterns' => [],
 
@@ -29,6 +36,7 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    // This must be true for cookie-based (stateful) Sanctum authentication
+    'supports_credentials' => true,
 
 ];
