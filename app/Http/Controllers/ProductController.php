@@ -23,18 +23,20 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
+            'name'        => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:50',
             'sku'         => 'nullable|string|max:100|unique:products,sku',
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'brand'       => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'buy_price'   => 'required|numeric|min:0',
-            'sell_price'  => 'required|numeric|min:0',
-            'stock'       => 'required|numeric|min:0',
-            'status'      => 'required|in:active,inactive',
+            'buy_price'   => 'nullable|numeric|min:0',
+            'sell_price'  => 'nullable|numeric|min:0',
+            'stock'       => 'nullable|numeric|min:0',
+            'status' => 'nullable|boolean',
+
+
         ]);
 
         if ($validator->fails()) {
@@ -80,18 +82,20 @@ class ProductController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'name'        => 'required|string|max:255',
+            'name'        => 'nullable|string|max:255',
             'unit'        => 'nullable|string|max:50',
             'sku'         => 'nullable|string|max:100|unique:products,sku,' . $id,
             'image'       => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => 'nullable|exists:categories,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'brand'       => 'nullable|string|max:255',
             'description' => 'nullable|string',
-            'buy_price'   => 'required|numeric|min:0',
-            'sell_price'  => 'required|numeric|min:0',
-            'stock'       => 'required|numeric|min:0',
-            'status'      => 'required|in:active,inactive',
+            'buy_price'   => 'nullable|numeric|min:0',
+            'sell_price'  => 'nullable|numeric|min:0',
+            'stock'       => 'nullable|numeric|min:0',
+              'status' => 'nullable|boolean',
+            
+          
         ]);
 
         if ($validator->fails()) {
