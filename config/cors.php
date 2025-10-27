@@ -21,12 +21,7 @@ return [
 
     // For Sanctum cookie-based authentication, do NOT use a wildcard '*' when
     // 'supports_credentials' is true. List the frontend origins explicitly.
-    'allowed_origins' => [
-        'http://localhost:8080',
-        'http://127.0.0.1:8080',
-        'http://localhost',
-        'http://127.0.0.1',
-    ],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 

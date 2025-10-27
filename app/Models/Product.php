@@ -42,4 +42,11 @@ class Product extends Model
     {
         return $this->hasMany(InventoryLog::class);
     }
+
+  //image upload 
+  
+    public function getImageAttribute($value)
+    {
+        return $value ? url('/' . $value) : null;
+    }
 }

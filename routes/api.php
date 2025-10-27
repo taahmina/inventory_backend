@@ -11,6 +11,7 @@ use App\Http\Controllers\{
     CustomerController,
     EmployeeController,
     PurchaseController,
+    PurchaseItemController,
     SaleController,
     ExpenseController,
     SalaryPaymentController
@@ -68,6 +69,7 @@ Route::apiResource('employees', EmployeeController::class);
 // Purchase Routes
 // ------------------------
 Route::apiResource('purchases', PurchaseController::class);
+Route::apiResource('purchase-items', PurchaseItemController::class);
 
 // ------------------------
 // Sale Routes
