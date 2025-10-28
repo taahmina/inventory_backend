@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 26, 2025 at 08:01 AM
+-- Generation Time: Oct 28, 2025 at 09:11 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -39,10 +39,10 @@ CREATE TABLE `categories` (
 --
 
 INSERT INTO `categories` (`id`, `name`, `created_at`, `updated_at`) VALUES
-(1, 'ghfdhg', '2025-10-25 22:29:15', '2025-10-25 22:30:31'),
-(2, 'hnfx', '2025-10-25 23:11:24', '2025-10-25 23:11:24'),
-(3, 'ghj', '2025-10-26 00:51:41', '2025-10-26 00:51:41'),
-(6, 'dzgd', '2025-10-26 00:52:19', '2025-10-26 00:52:19');
+(1, 'Beverage', '2025-10-28 11:53:46', '2025-10-28 11:53:46'),
+(2, 'Dairy', '2025-10-28 11:54:25', '2025-10-28 11:54:25'),
+(3, 'Bakery', '2025-10-28 11:55:11', '2025-10-28 11:55:11'),
+(4, 'Snacks', '2025-10-28 11:55:23', '2025-10-28 11:55:23');
 
 -- --------------------------------------------------------
 
@@ -120,7 +120,7 @@ CREATE TABLE `failed_jobs` (
 
 CREATE TABLE `inventory_logs` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `product_id` bigint(20) NOT NULL,
   `change_type` enum('IN','OUT') NOT NULL,
   `quantity` int(11) NOT NULL,
   `reference_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -157,14 +157,20 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (10, '2025_10_25_032911_create_orders_table', 1),
 (11, '2025_10_25_032923_create_order_items_table', 1),
 (12, '2025_10_25_032937_create_inventory_logs_table', 1),
-(13, '2025_10_25_035030_add_role_id_to_users_table', 2),
-(14, '2025_10_25_035840_create_employees_table', 3),
-(15, '2025_10_25_041611_create_purchases_table', 3),
-(16, '2025_10_25_041624_create_sales_table', 3),
-(17, '2025_10_25_041633_create_expenses_table', 3),
-(18, '2025_10_25_041646_create_salary_payments_table', 3),
-(19, '2025_10_25_041731_create_settings_table', 3),
-(20, '2025_10_26_061815_add_columns_to_products_table', 4);
+(13, '2025_10_25_035030_add_role_id_to_users_table', 1),
+(14, '2025_10_25_035840_create_employees_table', 1),
+(15, '2025_10_25_041611_create_purchases_table', 1),
+(16, '2025_10_25_041624_create_sales_table', 1),
+(17, '2025_10_25_041633_create_expenses_table', 1),
+(18, '2025_10_25_041646_create_salary_payments_table', 1),
+(19, '2025_10_25_041731_create_settings_table', 1),
+(20, '2025_10_26_061815_add_columns_to_products_table', 1),
+(21, '2025_10_27_040608_add_extra_columns_to_purchases_table', 1),
+(22, '2025_10_27_041500_create_purchase_items_table', 1),
+(23, '2025_10_28_050502_remove_price_from_products_table', 1),
+(24, '2025_10_28_051149_remove_cost_from_products_table', 1),
+(25, '2025_10_28_193038_create_sale_items_table', 2),
+(26, '2025_10_28_193910_add_columns_to_sales_table', 3);
 
 -- --------------------------------------------------------
 
@@ -174,8 +180,8 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 
 CREATE TABLE `orders` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `customer_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
+  `customer_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
   `total_amount` decimal(10,2) NOT NULL,
   `status` enum('pending','completed','cancelled') NOT NULL DEFAULT 'pending',
   `created_at` timestamp NULL DEFAULT NULL,
@@ -190,8 +196,8 @@ CREATE TABLE `orders` (
 
 CREATE TABLE `order_items` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `order_id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `order_id` bigint(20) NOT NULL,
+  `product_id` bigint(20) NOT NULL,
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
@@ -236,11 +242,8 @@ CREATE TABLE `personal_access_tokens` (
 --
 
 INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
-(1, 'App\\Models\\User', 1, 'kamal-AuthToken', '05b78a2f93e9cd4786d506392f2c6280eb7f9728972bfb3486c667569287b013', '[\"*\"]', NULL, NULL, '2025-10-25 00:10:05', '2025-10-25 00:10:05'),
-(2, 'App\\Models\\User', 1, 'kamal-AuthToken', '7bbf212e01f76aad4cf46b9d8601f462e3484477962eff5ff2d2f14df47e374f', '[\"*\"]', NULL, NULL, '2025-10-25 00:17:39', '2025-10-25 00:17:39'),
-(3, 'App\\Models\\User', 1, 'kamal-AuthToken', '1c1e98b60b0f0ba3659220c69ebf95634848f2f355f4a0a8b11807257c9360b8', '[\"*\"]', NULL, NULL, '2025-10-25 00:41:26', '2025-10-25 00:41:26'),
-(4, 'App\\Models\\User', 1, 'kamal-AuthToken', '3e8152e30a4436535a862f6c8a20d9f3a7670205b6bf3e20b5d456665f79fda1', '[\"*\"]', NULL, NULL, '2025-10-25 00:53:44', '2025-10-25 00:53:44'),
-(5, 'App\\Models\\User', 1, 'kamal-AuthToken', '9c65d7692cd686046889be4303ea54cf6b4d9d923af0d0818605b089730f3dff', '[\"*\"]', NULL, NULL, '2025-10-25 22:28:52', '2025-10-25 22:28:52');
+(1, 'App\\Models\\User', 1, 'kamal-AuthToken', '7a55293f7b0a5f4b0722352f46e14700faef373bcb167c000df50ca1b7eac5c4', '[\"*\"]', NULL, NULL, '2025-10-28 05:30:37', '2025-10-28 05:30:37'),
+(2, 'App\\Models\\User', 1, 'kamal-AuthToken', 'c1c2d6a69c819dad79863ab080d703ea9735f2a9f3ca59b8157e3d5705d279d2', '[\"*\"]', NULL, NULL, '2025-10-28 11:52:39', '2025-10-28 11:52:39');
 
 -- --------------------------------------------------------
 
@@ -251,9 +254,10 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 CREATE TABLE `products` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `name` varchar(255) NOT NULL,
-  `category_id` bigint(20) UNSIGNED NOT NULL,
-  `supplier_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `category_id` bigint(20) NOT NULL,
+  `supplier_id` bigint(20) NOT NULL,
   `sku` varchar(255) NOT NULL,
+  `stock_qty` int(11) NOT NULL DEFAULT 0,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   `description` text DEFAULT NULL,
@@ -266,6 +270,14 @@ CREATE TABLE `products` (
   `status` tinyint(1) NOT NULL DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `products`
+--
+
+INSERT INTO `products` (`id`, `name`, `category_id`, `supplier_id`, `sku`, `stock_qty`, `created_at`, `updated_at`, `description`, `unit`, `stock`, `brand`, `image`, `buy_price`, `sell_price`, `status`) VALUES
+(1, 'Yougurt', 2, 1, 'YG01', 0, '2025-10-28 11:56:46', '2025-10-28 13:07:20', 'dgdsfxj', '1kg', 42, 'Arong', 'uploads/products/1761674206_check-mark-green.png', 100.00, 150.00, 0),
+(2, 'Cakes', 3, 2, 'CK01', 0, '2025-10-28 11:58:04', '2025-10-28 12:54:12', 'dfgngfcm', '1pound', 40, 'Mithai', 'uploads/products/1761674284_firefox.png', 500.00, 800.00, 0);
+
 -- --------------------------------------------------------
 
 --
@@ -274,15 +286,53 @@ CREATE TABLE `products` (
 
 CREATE TABLE `purchases` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `supplier_id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
+  `invoice_no` varchar(255) NOT NULL,
+  `supplier_id` bigint(20) NOT NULL,
+  `purchase_date` date NOT NULL DEFAULT '2025-10-28',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `tax` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `paid_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `due_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_status` varchar(255) NOT NULL DEFAULT 'due',
+  `note` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `purchases`
+--
+
+INSERT INTO `purchases` (`id`, `invoice_no`, `supplier_id`, `purchase_date`, `created_at`, `updated_at`, `subtotal`, `discount`, `tax`, `total_cost`, `paid_amount`, `due_amount`, `payment_status`, `note`) VALUES
+(2, 'PUR-20251028183452', 1, '2025-10-28', '2025-10-28 12:34:52', '2025-10-28 12:36:13', 450.00, 0.00, 0.00, 450.00, 140.00, 310.00, 'partial', NULL),
+(3, 'PUR-20251028184446', 1, '2025-10-28', '2025-10-28 12:44:46', '2025-10-28 13:07:20', 3200.00, 0.00, 0.00, 3200.00, 400.00, 2800.00, 'partial', NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `purchase_items`
+--
+
+CREATE TABLE `purchase_items` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `purchase_id` bigint(20) NOT NULL,
+  `product_id` bigint(20) NOT NULL,
   `quantity` int(11) NOT NULL,
   `unit_price` decimal(10,2) NOT NULL,
   `total_cost` decimal(10,2) NOT NULL,
-  `purchase_date` date NOT NULL DEFAULT '2025-10-25',
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `purchase_items`
+--
+
+INSERT INTO `purchase_items` (`id`, `purchase_id`, `product_id`, `quantity`, `unit_price`, `total_cost`, `created_at`, `updated_at`) VALUES
+(2, 2, 1, 3, 150.00, 450.00, '2025-10-28 12:34:52', '2025-10-28 12:36:13'),
+(3, 3, 1, 16, 200.00, 3200.00, '2025-10-28 12:44:46', '2025-10-28 13:07:20');
 
 -- --------------------------------------------------------
 
@@ -305,9 +355,9 @@ CREATE TABLE `roles` (
 
 CREATE TABLE `salary_payments` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `employee_id` bigint(20) UNSIGNED NOT NULL,
+  `employee_id` bigint(20) NOT NULL,
   `amount` decimal(10,2) NOT NULL,
-  `pay_date` date NOT NULL DEFAULT '2025-10-25',
+  `pay_date` date NOT NULL DEFAULT '2025-10-28',
   `note` text DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -321,11 +371,35 @@ CREATE TABLE `salary_payments` (
 
 CREATE TABLE `sales` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `customer_id` bigint(20) UNSIGNED NOT NULL,
-  `product_id` bigint(20) UNSIGNED NOT NULL,
-  `quantity` int(11) NOT NULL,
+  `customer_id` bigint(20) NOT NULL,
   `total_price` decimal(10,2) NOT NULL,
-  `sale_date` date NOT NULL DEFAULT '2025-10-25',
+  `sale_date` date NOT NULL DEFAULT '2025-10-28',
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  `invoice_no` varchar(255) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `discount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `tax` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `paid_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `due_amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `payment_status` enum('paid','partial','due') NOT NULL DEFAULT 'due',
+  `note` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `sale_items`
+--
+
+CREATE TABLE `sale_items` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `sale_id` bigint(20) NOT NULL,
+  `product_id` bigint(20) NOT NULL,
+  `quantity` int(11) NOT NULL DEFAULT 1,
+  `unit_price` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `total_cost` decimal(10,2) NOT NULL DEFAULT 0.00,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -358,6 +432,14 @@ CREATE TABLE `suppliers` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `suppliers`
+--
+
+INSERT INTO `suppliers` (`id`, `name`, `email`, `phone`, `address`, `created_at`, `updated_at`) VALUES
+(1, 'xy', 'xy@gmail.com', '1243', 'dgvczn', '2025-10-28 11:53:01', '2025-10-28 11:53:01'),
+(2, 'ab', 'ab@gmail.com', '1234245', 'sdgbfx', '2025-10-28 11:53:21', '2025-10-28 11:53:21');
+
 -- --------------------------------------------------------
 
 --
@@ -381,7 +463,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`, `role_id`) VALUES
-(1, 'kamal', 'kamal@yahoo.com', NULL, '$2y$12$X0hzeRTAgAqq35yYs2HYDe4os7Oew4S/YmvgLLW.6H7fRKZgovgle', NULL, '2025-10-25 00:09:00', '2025-10-25 00:09:00', NULL);
+(1, 'kamal', 'kamal@yahoo.com', NULL, '$2y$12$0q8tp4pVB2B6fOtDir631.GyqhHOP3QCzs1rdP8zNM1rdadXpWHaO', NULL, '2025-10-28 05:30:28', '2025-10-28 05:30:28', NULL);
 
 --
 -- Indexes for dumped tables
@@ -424,8 +506,7 @@ ALTER TABLE `failed_jobs`
 -- Indexes for table `inventory_logs`
 --
 ALTER TABLE `inventory_logs`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `inventory_logs_product_id_foreign` (`product_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `migrations`
@@ -437,17 +518,13 @@ ALTER TABLE `migrations`
 -- Indexes for table `orders`
 --
 ALTER TABLE `orders`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `orders_customer_id_foreign` (`customer_id`),
-  ADD KEY `orders_user_id_foreign` (`user_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `order_items`
 --
 ALTER TABLE `order_items`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `order_items_order_id_foreign` (`order_id`),
-  ADD KEY `order_items_product_id_foreign` (`product_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `password_reset_tokens`
@@ -468,17 +545,20 @@ ALTER TABLE `personal_access_tokens`
 --
 ALTER TABLE `products`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `products_sku_unique` (`sku`),
-  ADD KEY `products_category_id_foreign` (`category_id`),
-  ADD KEY `products_supplier_id_foreign` (`supplier_id`);
+  ADD UNIQUE KEY `products_sku_unique` (`sku`);
 
 --
 -- Indexes for table `purchases`
 --
 ALTER TABLE `purchases`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `purchases_supplier_id_foreign` (`supplier_id`),
-  ADD KEY `purchases_product_id_foreign` (`product_id`);
+  ADD UNIQUE KEY `purchases_invoice_no_unique` (`invoice_no`);
+
+--
+-- Indexes for table `purchase_items`
+--
+ALTER TABLE `purchase_items`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `roles`
@@ -491,16 +571,20 @@ ALTER TABLE `roles`
 -- Indexes for table `salary_payments`
 --
 ALTER TABLE `salary_payments`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `salary_payments_employee_id_foreign` (`employee_id`);
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `sales`
 --
 ALTER TABLE `sales`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `sales_customer_id_foreign` (`customer_id`),
-  ADD KEY `sales_product_id_foreign` (`product_id`);
+  ADD UNIQUE KEY `sales_invoice_no_unique` (`invoice_no`);
+
+--
+-- Indexes for table `sale_items`
+--
+ALTER TABLE `sale_items`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `settings`
@@ -529,7 +613,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `categories`
 --
 ALTER TABLE `categories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `customers`
@@ -565,7 +649,7 @@ ALTER TABLE `inventory_logs`
 -- AUTO_INCREMENT for table `migrations`
 --
 ALTER TABLE `migrations`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `orders`
@@ -583,19 +667,25 @@ ALTER TABLE `order_items`
 -- AUTO_INCREMENT for table `personal_access_tokens`
 --
 ALTER TABLE `personal_access_tokens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `products`
 --
 ALTER TABLE `products`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `purchases`
 --
 ALTER TABLE `purchases`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT for table `purchase_items`
+--
+ALTER TABLE `purchase_items`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT for table `roles`
@@ -616,6 +706,12 @@ ALTER TABLE `sales`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `sale_items`
+--
+ALTER TABLE `sale_items`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `settings`
 --
 ALTER TABLE `settings`
@@ -625,64 +721,13 @@ ALTER TABLE `settings`
 -- AUTO_INCREMENT for table `suppliers`
 --
 ALTER TABLE `suppliers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `inventory_logs`
---
-ALTER TABLE `inventory_logs`
-  ADD CONSTRAINT `inventory_logs_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `orders`
---
-ALTER TABLE `orders`
-  ADD CONSTRAINT `orders_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE SET NULL,
-  ADD CONSTRAINT `orders_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `order_items`
---
-ALTER TABLE `order_items`
-  ADD CONSTRAINT `order_items_order_id_foreign` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `order_items_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `products`
---
-ALTER TABLE `products`
-  ADD CONSTRAINT `products_category_id_foreign` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `products_supplier_id_foreign` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE SET NULL;
-
---
--- Constraints for table `purchases`
---
-ALTER TABLE `purchases`
-  ADD CONSTRAINT `purchases_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `purchases_supplier_id_foreign` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `salary_payments`
---
-ALTER TABLE `salary_payments`
-  ADD CONSTRAINT `salary_payments_employee_id_foreign` FOREIGN KEY (`employee_id`) REFERENCES `employees` (`id`) ON DELETE CASCADE;
-
---
--- Constraints for table `sales`
---
-ALTER TABLE `sales`
-  ADD CONSTRAINT `sales_customer_id_foreign` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`id`) ON DELETE CASCADE,
-  ADD CONSTRAINT `sales_product_id_foreign` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
