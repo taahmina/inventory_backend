@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('purchases', function (Blueprint $table) {
              $table->string('invoice_no')->unique()->after('id');
-            $table->decimal('subtotal', 10, 2)->default(0)->after('product_id');
+            $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('discount', 10, 2)->default(0)->after('subtotal');
             $table->decimal('tax', 10, 2)->default(0)->after('discount');
             $table->decimal('total_cost', 10, 2)->default(0)->after('tax');

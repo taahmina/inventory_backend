@@ -11,12 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchases', function (Blueprint $table) {
-            $table->id();
-            $table->bigInteger('supplier_id');
-            $table->date('purchase_date')->default(now());
-            $table->timestamps();
-        });
+        Schema::table('products', function (Blueprint $table) {
+             $table->dropColumn('price');
+        }); 
     }
 
     /**
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('purchases');
+        Schema::table('products', function (Blueprint $table) {
+              $table->decimal('price', 10, 2)->nullable();
+        });
     }
 };

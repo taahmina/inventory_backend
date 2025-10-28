@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('salary_payments', function (Blueprint $table) {
             $table->id();
-             $table->foreignId('employee_id')->constrained()->onDelete('cascade');
+             $table->bigInteger('employee_id');
             $table->decimal('amount', 10, 2);
             $table->date('pay_date')->default(now());
             $table->text('note')->nullable();

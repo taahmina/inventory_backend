@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Purchase;
@@ -12,7 +11,6 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        // Return all purchases with supplier and their items
         $purchases = Purchase::with(['supplier', 'items.product'])->latest()->get();
         return response()->json($purchases);
     }
@@ -32,8 +30,7 @@ class PurchaseController extends Controller
             'note' => 'nullable|string'
         ]);
 
-        DB::transaction(function () use ($validated) {
-            // Generate unique invoice
+        $purchase = DB::transaction(function() use ($validated) {
             $invoice_no = 'PUR-' . now()->format('YmdHis');
 
             // Calculate subtotal
@@ -43,11 +40,14 @@ class PurchaseController extends Controller
 
             $discount = $validated['discount'] ?? 0;
             $tax = $validated['tax'] ?? 0;
-            $total_cost = ($subtotal - $discount) + $tax;
-            $paid = $validated['paid_amount'] ?? 0;
-            $due = $total_cost - $paid;
+            $total_cost = max(($subtotal - $discount) + $tax, 0); // avoid negative
 
-            // Create main purchase
+            $paid = $validated['paid_amount'] ?? 0;
+            $due = max($total_cost - $paid, 0);
+
+            $payment_status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
+
+            // Create purchase
             $purchase = Purchase::create([
                 'supplier_id' => $validated['supplier_id'],
                 'invoice_no' => $invoice_no,
@@ -58,29 +58,30 @@ class PurchaseController extends Controller
                 'total_cost' => $total_cost,
                 'paid_amount' => $paid,
                 'due_amount' => $due,
-                'payment_status' => $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due'),
+                'payment_status' => $payment_status,
                 'note' => $validated['note'] ?? null,
             ]);
 
-            // Insert purchase items + update stock
+            // Create purchase items and update stock
             foreach ($validated['items'] as $item) {
                 $lineTotal = $item['quantity'] * $item['unit_price'];
-
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $item['product_id'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
-                    'total_cost' => $lineTotal,
+                    'total_cost' => $lineTotal
                 ]);
 
                 // Increase product stock
                 Product::where('id', $item['product_id'])
-                    ->increment('stock_quantity', $item['quantity']);
+                    ->increment('stock', $item['quantity']);
             }
+
+            return $purchase;
         });
 
-        return response()->json(['message' => 'Purchase created successfully'], 201);
+        return response()->json(['message' => 'Purchase created successfully', 'purchase' => $purchase]);
     }
 
     public function show(Purchase $purchase)
@@ -90,17 +91,44 @@ class PurchaseController extends Controller
 
     public function update(Request $request, Purchase $purchase)
     {
-        $purchase->update($request->only(['paid_amount', 'payment_status', 'note']));
+        $validated = $request->validate([
+            'discount' => 'nullable|numeric|min:0',
+            'tax' => 'nullable|numeric|min:0',
+            'paid_amount' => 'nullable|numeric|min:0',
+            'note' => 'nullable|string'
+        ]);
+
+        // Recalculate totals
+        $subtotal = $purchase->items->sum(function($item){
+            return $item->quantity * $item->unit_price;
+        });
+        $discount = $validated['discount'] ?? $purchase->discount;
+        $tax = $validated['tax'] ?? $purchase->tax;
+        $total_cost = max(($subtotal - $discount) + $tax, 0);
+        $paid = $validated['paid_amount'] ?? $purchase->paid_amount;
+        $due = max($total_cost - $paid, 0);
+        $payment_status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
+
+        $purchase->update([
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'tax' => $tax,
+            'total_cost' => $total_cost,
+            'paid_amount' => $paid,
+            'due_amount' => $due,
+            'payment_status' => $payment_status,
+            'note' => $validated['note'] ?? $purchase->note,
+        ]);
+
         return response()->json(['message' => 'Purchase updated', 'purchase' => $purchase]);
     }
 
     public function destroy(Purchase $purchase)
     {
         DB::transaction(function () use ($purchase) {
-            // Reverse stock quantities before deleting
             foreach ($purchase->items as $item) {
                 Product::where('id', $item->product_id)
-                    ->decrement('stock_quantity', $item->quantity);
+                    ->decrement('stock', $item->quantity);
             }
 
             $purchase->items()->delete();

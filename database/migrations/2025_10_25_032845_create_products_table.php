@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('products', function (Blueprint $table) {
             $table->id();
              $table->string('name');
-        $table->foreignId('category_id')->constrained()->onDelete('cascade');
-        $table->foreignId('supplier_id')->nullable()->constrained()->onDelete('set null');
-        $table->string('sku')->unique();
-        $table->decimal('price', 10, 2);
-        $table->decimal('cost', 10, 2);
-        $table->integer('stock_qty')->default(0);
+            $table->bigInteger('category_id');
+            $table->bigInteger('supplier_id');
+            $table->string('sku')->unique();
+            $table->decimal('price', 10, 2);
+            $table->decimal('cost', 10, 2);
+            $table->integer('stock_qty')->default(0);
             $table->timestamps();
         });
     }

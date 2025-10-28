@@ -1,5 +1,7 @@
 <?php
 
+
+
 namespace App\Http\Controllers;
 
 use App\Models\PurchaseItem;
@@ -9,20 +11,17 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseItemController extends Controller
 {
-    // Get all purchase items
     public function index()
     {
         $items = PurchaseItem::with(['purchase.supplier', 'product'])->latest()->get();
         return response()->json($items);
     }
 
-    // Get a single purchase item
     public function show(PurchaseItem $purchaseItem)
     {
         return response()->json($purchaseItem->load(['purchase.supplier', 'product']));
     }
 
-    // Update a purchase item (quantity / unit_price)
     public function update(Request $request, PurchaseItem $purchaseItem)
     {
         $validated = $request->validate([
@@ -32,28 +31,33 @@ class PurchaseItemController extends Controller
 
         DB::transaction(function () use ($purchaseItem, $validated) {
             $oldQuantity = $purchaseItem->quantity;
+            $oldUnitPrice = $purchaseItem->unit_price;
+
+            $newQuantity = $validated['quantity'] ?? $oldQuantity;
+            $newUnitPrice = $validated['unit_price'] ?? $oldUnitPrice;
+
             $purchaseItem->update([
-                'quantity' => $validated['quantity'] ?? $purchaseItem->quantity,
-                'unit_price' => $validated['unit_price'] ?? $purchaseItem->unit_price,
-                'total_cost' => ($validated['quantity'] ?? $purchaseItem->quantity) * ($validated['unit_price'] ?? $purchaseItem->unit_price)
+                'quantity' => $newQuantity,
+                'unit_price' => $newUnitPrice,
+                'total_cost' => $newQuantity * $newUnitPrice,
             ]);
 
-            // Update stock based on quantity difference
-            $difference = ($validated['quantity'] ?? $purchaseItem->quantity) - $oldQuantity;
+            // Update stock
+            $difference = $newQuantity - $oldQuantity;
             Product::where('id', $purchaseItem->product_id)
-                ->increment('stock_quantity', $difference);
+                ->increment('stock', $difference);
         });
+
+        $purchaseItem->load('product');
 
         return response()->json(['message' => 'Purchase item updated successfully', 'item' => $purchaseItem]);
     }
 
-    // Delete a purchase item
     public function destroy(PurchaseItem $purchaseItem)
     {
         DB::transaction(function () use ($purchaseItem) {
-            // Reduce stock before deleting
             Product::where('id', $purchaseItem->product_id)
-                ->decrement('stock_quantity', $purchaseItem->quantity);
+                ->decrement('stock', $purchaseItem->quantity);
 
             $purchaseItem->delete();
         });
