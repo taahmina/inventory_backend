@@ -11,9 +11,17 @@ class Sale extends Model
 
      protected $fillable = [
         'customer_id',
-        'product_id',
         'quantity',
         'total_price',
+        'sale_date',
+        'invoice_no',
+        'subtotal',
+        'discount',
+        'tax',
+        'paid_amount',
+        'due_amount',
+        'payment_status',
+        'note',
         'sale_date'
     ];
 
