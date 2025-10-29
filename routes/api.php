@@ -13,6 +13,7 @@ use App\Http\Controllers\{
     PurchaseController,
     PurchaseItemController,
     SaleController,
+    SaleItemController,
     ExpenseController,
     SalaryPaymentController
 };
@@ -60,6 +61,7 @@ Route::apiResource('products', ProductController::class);
 // ------------------------
 Route::apiResource('customers', CustomerController::class);
 
+
 // ------------------------
 // Employee Routes
 // ------------------------
@@ -75,6 +77,7 @@ Route::apiResource('purchase-items', PurchaseItemController::class);
 // Sale Routes
 // ------------------------
 Route::apiResource('sales', SaleController::class);
+Route::apiResource('sale-items', SaleItemController::class);
 
 // ------------------------
 // Expense Routes

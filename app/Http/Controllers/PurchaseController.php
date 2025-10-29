@@ -24,7 +24,6 @@ class PurchaseController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -34,7 +33,43 @@ class PurchaseController extends Controller
         $purchase = DB::transaction(function () use ($validated) {
             $invoice_no = 'PUR-' . now()->format('YmdHis');
 
-            $subtotal = collect($validated['items'])->sum(fn($i) => $i['quantity'] * $i['unit_price']);
+            $subtotal = 0;
+
+            // Create purchase first
+            $purchase = Purchase::create([
+                'supplier_id' => $validated['supplier_id'],
+                'invoice_no' => $invoice_no,
+                'purchase_date' => $validated['purchase_date'],
+                'subtotal' => 0,
+                'discount' => $validated['discount'] ?? 0,
+                'tax' => $validated['tax'] ?? 0,
+                'total_cost' => 0,
+                'paid_amount' => $validated['paid_amount'] ?? 0,
+                'due_amount' => 0,
+                'payment_status' => 'due',
+                'note' => $validated['note'] ?? null,
+            ]);
+
+            foreach ($validated['items'] as $item) {
+                $product = Product::findOrFail($item['product_id']);
+                $unitPrice = $product->buy_price; // ✅ use buy_price as purchase price
+                $lineTotal = $item['quantity'] * $unitPrice;
+
+                PurchaseItem::create([
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $product->id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $unitPrice,
+                    'total_cost' => $lineTotal,
+                ]);
+
+                $subtotal += $lineTotal;
+
+                // Update stock
+                $product->increment('stock', $item['quantity']);
+            }
+
+            // Final total calculation
             $discount = $validated['discount'] ?? 0;
             $tax = $validated['tax'] ?? 0;
             $total_cost = max(($subtotal - $discount) + $tax, 0);
@@ -43,33 +78,12 @@ class PurchaseController extends Controller
             $due = max($total_cost - $paid, 0);
             $payment_status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
 
-            $purchase = Purchase::create([
-                'supplier_id' => $validated['supplier_id'],
-                'invoice_no' => $invoice_no,
-                'purchase_date' => $validated['purchase_date'],
+            $purchase->update([
                 'subtotal' => $subtotal,
-                'discount' => $discount,
-                'tax' => $tax,
                 'total_cost' => $total_cost,
-                'paid_amount' => $paid,
                 'due_amount' => $due,
                 'payment_status' => $payment_status,
-                'note' => $validated['note'] ?? null,
             ]);
-
-            foreach ($validated['items'] as $item) {
-                $lineTotal = $item['quantity'] * $item['unit_price'];
-
-                PurchaseItem::create([
-                    'purchase_id' => $purchase->id,
-                    'product_id' => $item['product_id'],
-                    'quantity' => $item['quantity'],
-                    'unit_price' => $item['unit_price'],
-                    'total_cost' => $lineTotal,
-                ]);
-
-                Product::where('id', $item['product_id'])->increment('stock', $item['quantity']);
-            }
 
             return $purchase->load(['supplier', 'items.product']);
         });

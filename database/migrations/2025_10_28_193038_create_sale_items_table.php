@@ -17,7 +17,7 @@ return new class extends Migration
             $table->bigInteger('product_id');
             $table->integer('quantity')->default(1);
             $table->decimal('unit_price', 10, 2)->default(0);
-            $table->decimal('total_cost', 10, 2)->default(0);
+            //$table->decimal('total_cost', 10, 2)->default(0);
             $table->timestamps();
         });
     }

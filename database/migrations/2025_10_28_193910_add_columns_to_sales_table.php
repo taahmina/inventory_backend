@@ -16,7 +16,7 @@ return new class extends Migration
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('discount', 10, 2)->default(0);
             $table->decimal('tax', 10, 2)->default(0);
-            $table->decimal('total_cost', 10, 2)->default(0);
+          
             $table->decimal('paid_amount', 10, 2)->default(0);
             $table->decimal('due_amount', 10, 2)->default(0);
             $table->enum('payment_status', ['paid','partial','due'])->default('due')->after('due_amount');
@@ -35,7 +35,7 @@ return new class extends Migration
                 'subtotal',
                 'discount',
                 'tax',
-                'total_cost',
+                
                 'paid_amount',
                 'due_amount',
                 'payment_status',
