@@ -24,6 +24,7 @@ class PurchaseController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0', // unit_price required
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -32,10 +33,8 @@ class PurchaseController extends Controller
 
         $purchase = DB::transaction(function () use ($validated) {
             $invoice_no = 'PUR-' . now()->format('YmdHis');
-
             $subtotal = 0;
 
-            // Create purchase first
             $purchase = Purchase::create([
                 'supplier_id' => $validated['supplier_id'],
                 'invoice_no' => $invoice_no,
@@ -52,9 +51,11 @@ class PurchaseController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
-                $unitPrice = $product->buy_price; // ✅ use buy_price as purchase price
+
+                $unitPrice = $item['unit_price']; // use purchase unit_price
                 $lineTotal = $item['quantity'] * $unitPrice;
 
+                // Create purchase item
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $product->id,
@@ -63,17 +64,19 @@ class PurchaseController extends Controller
                     'total_cost' => $lineTotal,
                 ]);
 
-                $subtotal += $lineTotal;
-
-                // Update stock
+                // Increment stock
                 $product->increment('stock', $item['quantity']);
+
+                // Automatically update product buy price
+                $product->update(['buy_price' => $unitPrice]);
+                
+                $subtotal += $lineTotal;
             }
 
-            // Final total calculation
+            // Final totals
             $discount = $validated['discount'] ?? 0;
             $tax = $validated['tax'] ?? 0;
             $total_cost = max(($subtotal - $discount) + $tax, 0);
-
             $paid = $validated['paid_amount'] ?? 0;
             $due = max($total_cost - $paid, 0);
             $payment_status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');

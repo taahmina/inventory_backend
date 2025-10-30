@@ -43,6 +43,11 @@ class Product extends Model
         return $this->hasMany(InventoryLog::class);
     }
 
+    public function purchase()
+    {
+        return $this->belongsTo(Purchase::class);
+    }
+
   //image upload 
   
     public function getImageAttribute($value)

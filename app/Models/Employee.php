@@ -12,10 +12,15 @@ class Employee extends Model
         'name',
         'email',
         'phone',
-        'address',
+         'username',
+         'password',
+        'profile_photo',
+         'address',
         'position',
         'salary',
-        'joining_date',
+         'joining_date',
+        'termination_date',
+        'notes',
         'status',
     ];
 }
