@@ -16,13 +16,19 @@ class EmployeeController extends Controller
 
     public function store(Request $request)
     {
+        // Convert empty strings to null
+        $request->merge([
+            'joining_date' => $request->joining_date ?: null,
+            'termination_date' => $request->termination_date ?: null,
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:employees,email',
             'phone' => 'nullable|string|max:20',
             'username' => 'nullable|string|unique:employees,username',
             'password' => 'nullable|string|min:6',
-            'profile_photo' => 'nullable|string',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'address' => 'nullable|string',
             'position' => 'nullable|string',
             'salary' => 'nullable|numeric',
@@ -36,9 +42,18 @@ class EmployeeController extends Controller
             $validated['password'] = Hash::make($validated['password']);
         }
 
+        if ($request->hasFile('profile_photo')) {
+            $imageName = time() . '_' . $request->profile_photo->getClientOriginalName();
+            $request->profile_photo->move(public_path('uploads/employees'), $imageName);
+            $validated['profile_photo'] = 'uploads/employees/' . $imageName;
+        }
+
         $employee = Employee::create($validated);
 
-        return response()->json(['message' => 'Employee created successfully', 'employee' => $employee]);
+        return response()->json([
+            'message' => 'Employee created successfully',
+            'employee' => $employee,
+        ]);
     }
 
     public function show(Employee $employee)
@@ -48,13 +63,19 @@ class EmployeeController extends Controller
 
     public function update(Request $request, Employee $employee)
     {
+        // Convert empty strings to null
+        $request->merge([
+            'joining_date' => $request->joining_date ?: null,
+            'termination_date' => $request->termination_date ?: null,
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'nullable|email|unique:employees,email,' . $employee->id,
             'phone' => 'nullable|string|max:20',
             'username' => 'nullable|string|unique:employees,username,' . $employee->id,
             'password' => 'nullable|string|min:6',
-            'profile_photo' => 'nullable|string',
+            'profile_photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'address' => 'nullable|string',
             'position' => 'nullable|string',
             'salary' => 'nullable|numeric',
@@ -67,17 +88,32 @@ class EmployeeController extends Controller
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
         } else {
-            unset($validated['password']); // keep existing password
+            unset($validated['password']);
+        }
+
+        if ($request->hasFile('profile_photo')) {
+            $imageName = time() . '_' . $request->profile_photo->getClientOriginalName();
+            $request->profile_photo->move(public_path('uploads/employees'), $imageName);
+            $validated['profile_photo'] = 'uploads/employees/' . $imageName;
         }
 
         $employee->update($validated);
 
-        return response()->json(['message' => 'Employee updated successfully', 'employee' => $employee]);
+        return response()->json([
+            'message' => 'Employee updated successfully',
+            'employee' => $employee,
+        ]);
     }
 
     public function destroy(Employee $employee)
     {
+        // Optionally delete profile photo from server
+        if ($employee->profile_photo && file_exists(public_path($employee->profile_photo))) {
+            @unlink(public_path($employee->profile_photo));
+        }
+
         $employee->delete();
+
         return response()->json(['message' => 'Employee deleted successfully']);
     }
 }
