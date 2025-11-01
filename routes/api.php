@@ -15,7 +15,8 @@ use App\Http\Controllers\{
     SaleController,
     SaleItemController,
     ExpenseController,
-    SalaryPaymentController
+    ReportController,
+    //SalaryPaymentController
 };
 
 /*
@@ -87,4 +88,16 @@ Route::apiResource('expenses', ExpenseController::class);
 // ------------------------
 // Salary Payment Routes
 // ------------------------
-Route::apiResource('salary-payments', SalaryPaymentController::class);
+//Route::apiResource('salary-payments', SalaryPaymentController::class);
+
+
+
+// ------------------------
+// Report Routes
+// ------------------------
+
+
+Route::get('reports/sales', [ReportController::class, 'salesReport']);
+Route::get('reports/expenses', [ReportController::class, 'expenseReport']);
+Route::get('reports/profit-loss', [ReportController::class, 'profitLossReport']);
+Route::get('reports/inventory', [ReportController::class, 'inventoryReport']);
