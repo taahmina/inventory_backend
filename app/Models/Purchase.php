@@ -8,7 +8,7 @@ class Purchase extends Model
        use HasFactory;
 
     protected $fillable = [
-      'supplier_id','invoice_no','purchase_date','subtotal','discount','tax', 'product_id',
+      'supplier_id','invoice_no','purchase_date','subtotal','discount','tax',
       'total_cost','paid_amount','due_amount','payment_status','note',
     ];
 

@@ -74,16 +74,24 @@ Route::apiResource('employees', EmployeeController::class);
 Route::apiResource('purchases', PurchaseController::class);
 Route::apiResource('purchase-items', PurchaseItemController::class);
 
+Route::get('purchases/{id}/invoice', [PurchaseController::class, 'invoice']);
+
+
 // ------------------------
 // Sale Routes
 // ------------------------
 Route::apiResource('sales', SaleController::class);
 Route::apiResource('sale-items', SaleItemController::class);
 
+// Sales Invoice
+Route::get('sales/{id}/invoice/', [SaleController::class, 'invoice']);
+
+
 // ------------------------
 // Expense Routes
 // ------------------------
 Route::apiResource('expenses', ExpenseController::class);
+
 
 // ------------------------
 // Salary Payment Routes

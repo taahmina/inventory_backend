@@ -18,8 +18,8 @@ class EmployeeController extends Controller
     {
         // Convert empty strings to null
         $request->merge([
-            'joining_date' => $request->joining_date ?: null,
-            'termination_date' => $request->termination_date ?: null,
+            'joining_date' => $request->joining_date ?? null,
+            'termination_date' => $request->termination_date ?? NULL,
         ]);
 
         $validated = $request->validate([
@@ -33,7 +33,7 @@ class EmployeeController extends Controller
             'position' => 'nullable|string',
             'salary' => 'nullable|numeric',
             'joining_date' => 'nullable|date',
-            'termination_date' => 'nullable|date',
+            'termination_date' => 'nullable',
             'notes' => 'nullable|string',
             'status' => 'nullable|boolean',
         ]);
@@ -65,8 +65,8 @@ class EmployeeController extends Controller
     {
         // Convert empty strings to null
         $request->merge([
-            'joining_date' => $request->joining_date ?: null,
-            'termination_date' => $request->termination_date ?: null,
+            'joining_date' => $request->joining_date ?? null,
+            'termination_date' => $request->termination_date=="null" ? null : $request->termination_date,
         ]);
 
         $validated = $request->validate([
@@ -80,7 +80,7 @@ class EmployeeController extends Controller
             'position' => 'nullable|string',
             'salary' => 'nullable|numeric',
             'joining_date' => 'nullable|date',
-            'termination_date' => 'nullable|date',
+            'termination_date' => 'nullable',
             'notes' => 'nullable|string',
             'status' => 'nullable|boolean',
         ]);

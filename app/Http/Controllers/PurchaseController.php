@@ -12,7 +12,10 @@ class PurchaseController extends Controller
 {
     public function index()
     {
-        $purchases = Purchase::with(['supplier', 'items.product'])->latest()->get();
+        $purchases = Purchase::with(['supplier', 'items.product'])
+            ->latest()
+            ->get();
+
         return response()->json($purchases);
     }
 
@@ -24,7 +27,7 @@ class PurchaseController extends Controller
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.unit_price' => 'required|numeric|min:0', // unit_price required
+            'items.*.unit_price' => 'required|numeric|min:0',
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
@@ -51,11 +54,9 @@ class PurchaseController extends Controller
 
             foreach ($validated['items'] as $item) {
                 $product = Product::findOrFail($item['product_id']);
-
-                $unitPrice = $item['unit_price']; // use purchase unit_price
+                $unitPrice = $item['unit_price'];
                 $lineTotal = $item['quantity'] * $unitPrice;
 
-                // Create purchase item
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
                     'product_id' => $product->id,
@@ -64,16 +65,13 @@ class PurchaseController extends Controller
                     'total_cost' => $lineTotal,
                 ]);
 
-                // Increment stock
+                // Update stock and buy price
                 $product->increment('stock', $item['quantity']);
-
-                // Automatically update product buy price
                 $product->update(['buy_price' => $unitPrice]);
-                
+
                 $subtotal += $lineTotal;
             }
 
-            // Final totals
             $discount = $validated['discount'] ?? 0;
             $tax = $validated['tax'] ?? 0;
             $total_cost = max(($subtotal - $discount) + $tax, 0);
@@ -91,12 +89,17 @@ class PurchaseController extends Controller
             return $purchase->load(['supplier', 'items.product']);
         });
 
-        return response()->json(['message' => 'Purchase created successfully', 'purchase' => $purchase]);
+        return response()->json([
+            'message' => 'Purchase created successfully',
+            'purchase' => $purchase
+        ]);
     }
 
     public function show(Purchase $purchase)
     {
-        return response()->json($purchase->load(['supplier', 'items.product']));
+        return response()->json(
+            $purchase->load(['supplier', 'items.product'])
+        );
     }
 
     public function update(Request $request, Purchase $purchase)
@@ -105,10 +108,40 @@ class PurchaseController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'tax' => 'nullable|numeric|min:0',
             'paid_amount' => 'nullable|numeric|min:0',
-            'note' => 'nullable|string'
+            'note' => 'nullable|string',
+            'items' => 'nullable|array',
+            'items.*.id' => 'nullable|exists:purchase_items,id',
+            'items.*.product_id' => 'nullable|exists:products,id',
+            'items.*.quantity' => 'nullable|integer|min:1',
+            'items.*.unit_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($purchase, $validated) {
+            // Update items if provided
+            if (!empty($validated['items'])) {
+                foreach ($validated['items'] as $item) {
+                    $purchaseItem = PurchaseItem::find($item['id']);
+                    if ($purchaseItem) {
+                        $oldQty = $purchaseItem->quantity;
+                        $product = Product::findOrFail($item['product_id']);
+
+                        // Adjust stock
+                        $product->decrement('stock', $oldQty);
+                        $product->increment('stock', $item['quantity']);
+
+                        // Update item details
+                        $purchaseItem->update([
+                            'quantity' => $item['quantity'],
+                            'unit_price' => $item['unit_price'],
+                            'total_cost' => $item['quantity'] * $item['unit_price'],
+                        ]);
+
+                        // Update buy price
+                        $product->update(['buy_price' => $item['unit_price']]);
+                    }
+                }
+            }
+
             $subtotal = $purchase->items->sum(fn($i) => $i->quantity * $i->unit_price);
             $discount = $validated['discount'] ?? $purchase->discount;
             $tax = $validated['tax'] ?? $purchase->tax;
@@ -129,7 +162,10 @@ class PurchaseController extends Controller
             ]);
         });
 
-        return response()->json(['message' => 'Purchase updated successfully', 'purchase' => $purchase->fresh(['supplier', 'items.product'])]);
+        return response()->json([
+            'message' => 'Purchase updated successfully',
+            'purchase' => $purchase->fresh(['supplier', 'items.product'])
+        ]);
     }
 
     public function destroy(Purchase $purchase)
@@ -145,4 +181,15 @@ class PurchaseController extends Controller
 
         return response()->json(['message' => 'Purchase deleted successfully']);
     }
+
+  // ✅ Add the invoice method here
+    public function invoice($id)
+    {
+        $purchase = Purchase::with(['supplier', 'items.product'])->findOrFail($id);
+
+        return response()->json([
+            'purchase' => $purchase
+        ]);
+    }
+
 }

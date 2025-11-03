@@ -35,32 +35,41 @@ class PurchaseItemController extends Controller
             $newQty = $validated['quantity'] ?? $oldQty;
             $newPrice = $validated['unit_price'] ?? $oldPrice;
 
+            // Update purchase item
             $purchaseItem->update([
                 'quantity' => $newQty,
                 'unit_price' => $newPrice,
                 'total_cost' => $newQty * $newPrice,
             ]);
 
-            // Update stock
+            // ✅ Update product stock
             $difference = $newQty - $oldQty;
-            Product::where('id', $purchaseItem->product_id)->increment('stock', $difference);
+            $product = Product::findOrFail($purchaseItem->product_id);
+            $product->increment('stock', $difference);
 
-            // Recalculate purchase totals
+            // ✅ Update product buy_price if unit price changed
+            if ($newPrice != $oldPrice) {
+                $product->update(['buy_price' => $newPrice]);
+            }
+
+            // ✅ Recalculate purchase totals
             $purchase = Purchase::find($purchaseItem->purchase_id);
-            $subtotal = $purchase->items->sum(fn($i) => $i->quantity * $i->unit_price);
-            $discount = $purchase->discount;
-            $tax = $purchase->tax;
-            $total_cost = max(($subtotal - $discount) + $tax, 0);
-            $paid = $purchase->paid_amount;
-            $due = max($total_cost - $paid, 0);
-            $status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
+            if ($purchase) {
+                $subtotal = $purchase->items->sum(fn($i) => $i->quantity * $i->unit_price);
+                $discount = $purchase->discount;
+                $tax = $purchase->tax;
+                $total_cost = max(($subtotal - $discount) + $tax, 0);
+                $paid = $purchase->paid_amount;
+                $due = max($total_cost - $paid, 0);
+                $status = $due <= 0 ? 'paid' : ($paid > 0 ? 'partial' : 'due');
 
-            $purchase->update([
-                'subtotal' => $subtotal,
-                'total_cost' => $total_cost,
-                'due_amount' => $due,
-                'payment_status' => $status,
-            ]);
+                $purchase->update([
+                    'subtotal' => $subtotal,
+                    'total_cost' => $total_cost,
+                    'due_amount' => $due,
+                    'payment_status' => $status,
+                ]);
+            }
         });
 
         return response()->json(['message' => 'Purchase item updated successfully']);
@@ -69,12 +78,15 @@ class PurchaseItemController extends Controller
     public function destroy(PurchaseItem $purchaseItem)
     {
         DB::transaction(function () use ($purchaseItem) {
-            Product::where('id', $purchaseItem->product_id)->decrement('stock', $purchaseItem->quantity);
+            $product = Product::find($purchaseItem->product_id);
+            if ($product) {
+                $product->decrement('stock', $purchaseItem->quantity);
+            }
 
             $purchaseId = $purchaseItem->purchase_id;
             $purchaseItem->delete();
 
-            // Recalculate totals after delete
+            // Recalculate totals after deletion
             $purchase = Purchase::find($purchaseId);
             if ($purchase) {
                 $subtotal = $purchase->items->sum(fn($i) => $i->quantity * $i->unit_price);

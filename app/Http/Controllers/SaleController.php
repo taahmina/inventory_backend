@@ -135,4 +135,14 @@ class SaleController extends Controller
 
         return response()->json(['message' => 'Sale deleted successfully']);
     }
+
+    public function invoice($id)
+{
+    $sale = Sale::with(['customer', 'items.product'])->findOrFail($id);
+
+    return response()->json([
+        'sale' => $sale
+    ]);
+}
+
 }
