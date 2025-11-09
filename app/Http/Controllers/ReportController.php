@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Expense;
 use App\Models\Product;
+use App\Models\Purchase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,7 +14,6 @@ class ReportController extends Controller
 {
     /**
      * Sales Report
-     * Optionally, filter by date range using request params: start_date, end_date
      */
     public function salesReport(Request $request)
     {
@@ -24,11 +24,8 @@ class ReportController extends Controller
         }
 
         $sales = $query->get();
-
-        // Total sales amount
         $totalSales = $sales->sum('total_price');
 
-        // Best-selling products
         $bestSelling = SaleItem::select('product_id', DB::raw('SUM(quantity) as total_qty'))
             ->groupBy('product_id')
             ->orderByDesc('total_qty')
@@ -44,7 +41,6 @@ class ReportController extends Controller
 
     /**
      * Expense Report
-     * Optionally, filter by date range using request params: start_date, end_date
      */
     public function expenseReport(Request $request)
     {
@@ -55,15 +51,10 @@ class ReportController extends Controller
         }
 
         $expenses = $query->get();
-
-        // Total expenses
         $totalExpenses = $expenses->sum('amount');
 
-        // Expenses by category
         $expensesByCategory = $expenses->groupBy('category')
-            ->map(function ($group) {
-                return $group->sum('amount');
-            });
+            ->map(fn($group) => $group->sum('amount'));
 
         return response()->json([
             'total_expenses' => $totalExpenses,
@@ -73,45 +64,92 @@ class ReportController extends Controller
     }
 
     /**
-     * Profit & Loss Report
-     * Optionally, filter by date range using request params: start_date, end_date
+     * ✅ Profit & Loss Report (with daily breakdown and total purchase)
      */
     public function profitLossReport(Request $request)
     {
         $salesQuery = Sale::query();
+        $purchaseQuery = Purchase::query();
         $expenseQuery = Expense::query();
 
         if ($request->start_date && $request->end_date) {
             $salesQuery->whereBetween('sale_date', [$request->start_date, $request->end_date]);
+            $purchaseQuery->whereBetween('purchase_date', [$request->start_date, $request->end_date]);
             $expenseQuery->whereBetween('expense_date', [$request->start_date, $request->end_date]);
         }
 
-        $totalSales = $salesQuery->sum('total_price');
-        $totalExpenses = $expenseQuery->sum('amount');
-        $profit = $totalSales - $totalExpenses;
+        // Group sales, purchases, expenses by date
+        $sales = $salesQuery->select(
+            DB::raw('DATE(sale_date) as date'),
+            DB::raw('SUM(total_price) as total_sales')
+        )->groupBy('date')->get();
 
-        return response()->json([
+        $purchases = $purchaseQuery->select(
+            DB::raw('DATE(purchase_date) as date'),
+            DB::raw('SUM(total_cost) as total_purchase')
+        )->groupBy('date')->get();
+
+        $expenses = $expenseQuery->select(
+            DB::raw('DATE(expense_date) as date'),
+            DB::raw('SUM(amount) as total_expenses')
+        )->groupBy('date')->get();
+
+        // Merge by all unique dates
+        $dates = collect(array_unique(array_merge(
+            $sales->pluck('date')->toArray(),
+            $purchases->pluck('date')->toArray(),
+            $expenses->pluck('date')->toArray()
+        )))->sort();
+
+        $report = [];
+        foreach ($dates as $date) {
+            $totalSales = $sales->firstWhere('date', $date)?->total_sales ?? 0;
+            $totalPurchase = $purchases->firstWhere('date', $date)?->total_purchase ?? 0;
+            $totalExpenses = $expenses->firstWhere('date', $date)?->total_expenses ?? 0;
+
+            $grossProfit = $totalSales - $totalPurchase;
+            $netProfit = $grossProfit - $totalExpenses;
+
+            $report[] = [
+                'date' => $date,
+                'total_sales' => $totalSales,
+                'total_purchase_cost' => $totalPurchase,
+                'total_expenses' => $totalExpenses,
+                'gross_profit' => $grossProfit,
+                'net_profit' => $netProfit,
+            ];
+        }
+
+        // Add overall totals row
+        $totalSales = $sales->sum('total_sales');
+        $totalPurchase = $purchases->sum('total_purchase');
+        $totalExpenses = $expenses->sum('total_expenses');
+        $grossProfit = $totalSales - $totalPurchase;
+        $netProfit = $grossProfit - $totalExpenses;
+
+        $report[] = [
+            'date' => null,
             'total_sales' => $totalSales,
+            'total_purchase_cost' => $totalPurchase,
             'total_expenses' => $totalExpenses,
-            'profit' => $profit,
-        ]);
+            'gross_profit' => $grossProfit,
+            'net_profit' => $netProfit,
+        ];
+
+        return response()->json($report);
     }
 
     /**
      * Inventory Report
-     * Low stock alert and stock value
      */
     public function inventoryReport(Request $request)
     {
         $products = Product::all();
-
         $lowStockThreshold = $request->low_stock_threshold ?? 5;
 
         $lowStock = $products->filter(fn($p) => $p->stock <= $lowStockThreshold);
 
-        $stockValue = $products->sum(function ($p) {
-            return $p->stock * $p->buy_price;
-        });
+        $stockValue = $products->sum(fn($p) => $p->stock * $p->buy_price);
 
         return response()->json([
             'products' => $products,
